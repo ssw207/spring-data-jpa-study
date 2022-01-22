@@ -9,6 +9,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.entity.Member;
 
+import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 //@RunWith(SpringRunner.class) // junit5 에서는 없어도됨
@@ -32,5 +35,34 @@ class MemberJpaRepositoryTest {
         assertEquals(findMember.getId(), savedMember.getId());
         assertEquals(findMember.getUsername(), savedMember.getUsername());
         assertEquals(findMember, savedMember);
+    }
+
+    @Test
+    public void basicCRUD() throws Exception {
+        Member member1 = new Member("member1");
+        Member member2 = new Member("member2");
+        memberJpaRepository.save(member1);
+        memberJpaRepository.save(member2);
+
+        //단건조회 검증
+        Member findMember1 = memberJpaRepository.findById(member1.getId()).get();
+        Member findMember2 = memberJpaRepository.findById(member2.getId()).get();
+        
+        assertEquals(member1, findMember1);
+        assertEquals(member2, findMember2);
+        assertEquals(member1.getId(), findMember1.getId());
+        assertEquals(member1.getUsername(), findMember1.getUsername());
+
+        //다건 조회 검증
+        List<Member> all = memberJpaRepository.findAll();
+        long count = memberJpaRepository.count();
+        assertEquals(count, all.size());
+
+        //삭제검증
+        memberJpaRepository.delete(member1);
+        memberJpaRepository.delete(member2);
+
+        long count2 = memberJpaRepository.count();
+        assertEquals(count2, 0);
     }
 }
