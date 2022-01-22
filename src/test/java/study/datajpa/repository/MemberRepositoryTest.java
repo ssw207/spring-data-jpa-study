@@ -88,6 +88,23 @@ class MemberRepositoryTest {
     public void findHelloBy() throws Exception {
         List<Member> helloBy = memberRepository.findHelloBy();
     }
+
+    @Test
+    public void testQuery() throws Exception {
+        //given
+        Member member1 = new Member("AAA", 10);
+        Member member2 = new Member("AAA", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        //when
+        List<Member> result = memberRepository.findUser("AAA", 20);
+
+        //then
+        assertEquals(result.get(0).getUsername(), "AAA");
+        assertEquals(result.get(0).getAge(), 20);
+        assertEquals(result.size(), 1);
+    }
 }
 
 
