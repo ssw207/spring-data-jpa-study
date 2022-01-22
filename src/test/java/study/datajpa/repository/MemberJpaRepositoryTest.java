@@ -1,23 +1,19 @@
 package study.datajpa.repository;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test; // jupiter -> junit5
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.entity.Member;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 //@RunWith(SpringRunner.class) // junit5 에서는 없어도됨
 @SpringBootTest
 @Transactional // 기본적으로 테스트인 경우 끝날때 롤백을 자동으로 시키고 flush도하지 않음
-@Rollback(value = false) // 롤백하지 않도록 설정
+//@Rollback(value = false) // 롤백하지 않도록 설정
 class MemberJpaRepositoryTest {
 
     @Autowired MemberJpaRepository memberJpaRepository;
@@ -64,5 +60,22 @@ class MemberJpaRepositoryTest {
 
         long count2 = memberJpaRepository.count();
         assertEquals(count2, 0);
+    }
+    
+    @Test
+    public void findByUsernameAndAgeGreateThen() throws Exception {
+        //given
+        Member member1 = new Member("AAA", 10);
+        Member member2 = new Member("AAA", 20);
+        memberJpaRepository.save(member1);
+        memberJpaRepository.save(member2);
+
+        //when
+        List<Member> result = memberJpaRepository.findByUsernameAndAgeGreaterThan("AAA", 15);
+
+        //then
+        assertEquals(result.get(0).getUsername(), "AAA");
+        assertEquals(result.get(0).getAge(), 20);
+        assertEquals(result.size(), 1);
     }
 }
