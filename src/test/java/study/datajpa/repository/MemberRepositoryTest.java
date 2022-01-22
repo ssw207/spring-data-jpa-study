@@ -4,6 +4,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
@@ -189,6 +193,94 @@ class MemberRepositoryTest {
 
         Optional<Member> emptyMember2 = memberRepository.findOptionalByUsername("임의값");
         assertEquals(emptyMember2.isPresent(), false);
+    }
+
+    @Test
+    public void paging() throws Exception {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        //when
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+
+        //then
+        List<Member> content = page.getContent();
+        long totalElements = page.getTotalElements();
+
+        assertEquals(content.size(), 3);
+        assertEquals(totalElements, 5);
+        assertEquals(page.getNumber(), 0);
+        assertEquals(page.getTotalPages(), 2);
+        assertEquals(page.isFirst(), true);
+        assertEquals(page.hasNext(), true);
+    }
+
+    @Test
+    public void paging2() throws Exception {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        //when
+        Slice<Member> page = memberRepository.findSliceByAge(age, pageRequest); // 전체 페이지 수를 가져오지 않음. slice limit는 4임
+
+        //then
+        List<Member> content = page.getContent();
+
+        assertEquals(content.size(), 3);
+        assertEquals(page.getNumber(), 0);
+        assertEquals(page.isFirst(), true);
+        assertEquals(page.hasNext(), true);
+    }
+
+    @Test
+    public void paging3() throws Exception {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        //when
+        List<Member> page = memberRepository.findListByAge(age, pageRequest); // 0~limit까지만 끊어서 가져옴
+
+        //then
+        assertEquals(page.size(), 3);
+
+    }
+
+    @Test
+    public void paging4() throws Exception {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        //when
+        Page<Member> page = memberRepository.findQueryByAge(age, pageRequest); // 0~limit까지만 끊어서 가져옴
+        Page<MemberDto> map = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
     }
 }
 
