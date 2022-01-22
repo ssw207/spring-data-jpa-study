@@ -12,9 +12,12 @@ import study.datajpa.entity.Team;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest
 @Transactional
@@ -158,6 +161,34 @@ class MemberRepositoryTest {
         for (Member member : result) {
             System.out.println("member = "+ member);
         }
+    }
+
+    @Test
+    public void returnType() throws Exception {
+        //given
+        Member member1 = new Member("AAA", 10);
+        Member member2 = new Member("BBB", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        List<Member> aaa = memberRepository.findListByUsername("AAA");
+        assertEquals(aaa.size(), 1);
+
+        //"컬랙션은 조회결과가 없어도 null이 아니다"
+        List<Member> empty = memberRepository.findListByUsername("임의값"); 
+        assertEquals(empty.isEmpty(), true);
+
+        Member findMember = memberRepository.findMemberByUsername("AAA");
+        assertEquals(findMember.getId(), member1.getId());
+        
+        Member emptyMember = memberRepository.findMemberByUsername("임의값");
+        assertNull(emptyMember);
+
+        Optional<Member> findMember2 = memberRepository.findOptionalByUsername("AAA"); //
+        assertEquals(findMember2.get().getId(), member1.getId());
+
+        Optional<Member> emptyMember2 = memberRepository.findOptionalByUsername("임의값");
+        assertEquals(emptyMember2.isPresent(), false);
     }
 }
 

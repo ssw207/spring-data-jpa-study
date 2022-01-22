@@ -8,6 +8,7 @@ import study.datajpa.entity.Member;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 // spring data jpa가 구현클래스를 프록시로 만들어 주입
 public interface MemberRepository extends JpaRepository<Member, Long> {// entyty, id
@@ -26,4 +27,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {// entyty
 
     @Query("select m from Member m where m.username in :names") // in절로 조회
     List<Member> findByNames(@Param("names") Collection<String> names);
+
+    List<Member> findListByUsername(String username); // 컬랙션
+    Member findMemberByUsername(String username); // 단건
+    Optional<Member> findOptionalByUsername(String username); // 단건 Optional
 }
