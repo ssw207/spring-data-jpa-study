@@ -6,8 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
+import study.datajpa.entity.Team;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MemberRepositoryTest {
 
     @Autowired MemberRepository memberRepository;
+    @Autowired TeamRepository teamRepository;
     
     @Test
     public void testMember() throws Exception {
@@ -104,6 +108,56 @@ class MemberRepositoryTest {
         assertEquals(result.get(0).getUsername(), "AAA");
         assertEquals(result.get(0).getAge(), 20);
         assertEquals(result.size(), 1);
+    }
+
+    @Test
+    public void findUsernameList() throws Exception {
+        //given
+        Member member1 = new Member("AAA", 10);
+        Member member2 = new Member("BBB", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        //when
+        List<String> result = memberRepository.findUsernameList();
+
+        //then
+        assertEquals(result.size(), 2);
+    }
+    
+    @Test
+    public void findMemberDto() throws Exception {
+        Team team  = new Team("teamA");
+        teamRepository.save(team);
+
+        //given
+        Member member1 = new Member("AAA", 10);
+        memberRepository.save(member1);
+
+        member1.changeTeam(team);
+
+        //when
+        List<MemberDto> result = memberRepository.findMemberDto();
+        for (MemberDto memberDto : result) {
+            System.out.println(memberDto.toString());
+        }
+        //then
+        //assertEquals(result.size(), 2);
+    }
+
+    @Test
+    public void findByNames() throws Exception {
+        //given
+        Member member1 = new Member("AAA", 10);
+        Member member2 = new Member("BBB", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        //when
+        List<Member> result = memberRepository.findByNames(Arrays.asList("AAA","BBB"));
+        for (Member member : result) {
+            System.out.println("member = "+ member);
+        }
     }
 }
 
