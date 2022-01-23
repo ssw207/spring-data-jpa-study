@@ -14,6 +14,8 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -30,7 +32,8 @@ class MemberRepositoryTest {
 
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
-    
+    @PersistenceContext EntityManager em;
+
     @Test
     public void testMember() throws Exception {
         //spring data jpa 구현체를 만들어 주입해줌
@@ -281,6 +284,151 @@ class MemberRepositoryTest {
         //when
         Page<Member> page = memberRepository.findQueryByAge(age, pageRequest); // 0~limit까지만 끊어서 가져옴
         Page<MemberDto> map = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
+    }
+
+    @Test
+    public void bulkUpdate() throws Exception {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 40));
+
+        //when
+        int age = 20;
+
+        //벌크연산은 영속성 컨텍스트를 무시하고 변경
+        int resultCnt = memberRepository.bulkAgePlus(age);
+        em.flush(); // 변경점이 DB에 반영
+        em.clear(); // 영속성 컨텍스트 초기화
+
+        // 영속성 컨텍스트가 초기화 되어 벌크연산으로 변경된 정보가 적용됨
+        Member findMember5 = memberRepository.findMemberByUsername("member5");
+
+        //then
+        assertEquals(3, resultCnt);
+        assertEquals(findMember5.getAge(), 41);
+    }
+    
+    @Test
+    public void findMemberLazy() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamA);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> members = memberRepository.findAll();
+
+        for (Member member : members) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+
+        //then
+    }
+
+    @Test
+    public void findMemberLazy2() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamA);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> members = memberRepository.findMemberFetchJoin();
+
+        for (Member member : members) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+
+        //then
+    }
+
+    @Test
+    public void findMemberLazy3() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member1", 10, teamA);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> members = memberRepository.findEntityGraphByUsername("member1");
+
+        for (Member member : members) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+
+        //then
+    }
+
+    @Test
+    public void findMemberLazy4() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member1", 10, teamA);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> members = memberRepository.findEntityGraph2ByUsername("member1");
+
+        for (Member member : members) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+
+        //then
     }
 }
 

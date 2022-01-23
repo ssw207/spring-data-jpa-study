@@ -3,6 +3,7 @@ package study.datajpa.repository;
 import org.junit.jupiter.api.Test; // jupiter -> junit5
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.entity.Member;
 
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 //@RunWith(SpringRunner.class) // junit5 에서는 없어도됨
 @SpringBootTest
 @Transactional // 기본적으로 테스트인 경우 끝날때 롤백을 자동으로 시키고 flush도하지 않음
-//@Rollback(value = false) // 롤백하지 않도록 설정
+@Rollback(value = false) // 롤백하지 않도록 설정
 class MemberJpaRepositoryTest {
 
     @Autowired MemberJpaRepository memberJpaRepository;
@@ -99,5 +100,22 @@ class MemberJpaRepositoryTest {
         //then
         assertEquals(members.size(), 3);
         assertEquals(totalCount, 5);
+    }
+    
+    @Test
+    public void bulkUpdate() throws Exception {
+        //given
+        memberJpaRepository.save(new Member("member1", 10));
+        memberJpaRepository.save(new Member("member2", 19));
+        memberJpaRepository.save(new Member("member3", 20));
+        memberJpaRepository.save(new Member("member4", 21));
+        memberJpaRepository.save(new Member("member5", 40));
+
+        //when
+        int age = 20;
+        int resultCnt = memberJpaRepository.bulkAgePlus(age);
+
+        //then
+        assertEquals(3, resultCnt);
     }
 }
