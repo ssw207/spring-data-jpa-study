@@ -443,6 +443,20 @@ class MemberRepositoryTest {
 
         em.flush();
     }
+
+    @Test
+    public void lock() {
+        Member member1 = memberRepository.save(new Member("member1", 10));
+        em.flush();
+        em.clear();
+
+        //when
+        memberRepository.findLockByUsername("member1");
+    }
+    
+    @Test
+    public void callCustom() throws Exception {
+        //given
+        List<Member> result = memberRepository.findMemberCustom();
+    }
 }
-
-

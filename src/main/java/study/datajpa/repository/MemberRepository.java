@@ -9,13 +9,14 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
 import javax.persistence.Entity;
+import javax.persistence.LockModeType;
 import javax.persistence.QueryHint;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 // spring data jpa가 구현클래스를 프록시로 만들어 주입
-public interface MemberRepository extends JpaRepository<Member, Long> {// entyty, id
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {// entyty, id
     
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age); //길어지면 가독성이 떨어짐
     List<Member> findHelloBy(); // By가 끝에 붙으면 전체조회
@@ -68,8 +69,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {// entyty
     List<Member> findEntityGraph2ByUsername(@Param("username") String username);
 
     /**
-     * 하이버네이트에서 제공하는 기능 readOnly를 설정하면 캐싱하지 않음
+     * 하이버네이트에서 제공하는 기능 readOnly를 설정하면 영속성 컨텍스트에서 캐싱하지 않음 즉 더티체킹이 불가능
      */
     @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
     Member findReadOnlyByUsername(String username);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }
