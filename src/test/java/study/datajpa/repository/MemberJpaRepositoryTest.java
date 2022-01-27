@@ -1,16 +1,15 @@
 package study.datajpa.repository;
 
-import org.junit.jupiter.api.Test; // jupiter -> junit5
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.entity.Member;
 
-import javax.persistence.EntityManager;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 //@RunWith(SpringRunner.class) // junit5 에서는 없어도됨
 @SpringBootTest
