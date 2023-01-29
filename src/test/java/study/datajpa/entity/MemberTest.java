@@ -54,12 +54,12 @@ class MemberTest {
     public void jpaEventBaseEntity() throws Exception {
         //given
         Member member = new Member("member1");
-        memberRepository.save(member);
+        memberRepository.save(member); // @PrePersist 실행
 
         Thread.sleep(100);
         member.setUsername("member2");
 
-        em.flush(); // @PreUpdate
+        em.flush(); // @PreUpdate 실행
         em.clear();
 
         //when
@@ -67,8 +67,8 @@ class MemberTest {
 
 
         //then
-        System.out.println("findMember.getCreatedDate() = " + findMember.getCreatedDate());
-        System.out.println("findMember.getUpdatedDate() = " + findMember.getLastModifiedDate());
+        System.out.println("findMember.getCreatedDate() = " + findMember.getCreatedDate()); // 자동으로 데이터가 들어감
+        System.out.println("findMember.getUpdatedDate() = " + findMember.getLastModifiedDate()); // 자동으로 데이터가 들어감
         System.out.println("findMember.getCreatedBy() = " + findMember.getCreatedBy());
         System.out.println("findMember.getLastModifiedBy() = " + findMember.getLastModifiedBy());
     }

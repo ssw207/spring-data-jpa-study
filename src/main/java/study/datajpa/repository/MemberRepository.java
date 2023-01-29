@@ -43,10 +43,10 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     List<Member> findListByAge(int age, Pageable pageable);
 
     @Query(value = "select m from Member m join m.team t",
-            countQuery = "select count(m.username) from Member m") // 카운트 쿼리 분리가능
+            countQuery = "select count(m.username) from Member m") // 카운트 쿼리가 복잡할 경우 카운트 쿼리 분리가능.
     Page<Member> findQueryByAge(int age, Pageable pageable);
 
-    @Modifying(clearAutomatically = true) // jpa executeUpdate 실행
+    @Modifying(clearAutomatically = true) // jpa executeUpdate 실행. clearAutomatically = true : 영속성 컨텍스트를 자동으로 초기화
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
 
@@ -61,7 +61,7 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     @Query("select m from Member m")
     List<Member> findMemberEntityGraph();
 
-    @EntityGraph(attributePaths = {"team"})
+    @EntityGraph(attributePaths = {"team"}) // 내부적으로 패치조인을 사용한다
     List<Member> findEntityGraphByUsername(@Param("username") String username);
 
     @EntityGraph("Member.all")

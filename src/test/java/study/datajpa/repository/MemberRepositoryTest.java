@@ -1,5 +1,6 @@
 package study.datajpa.repository;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -206,21 +207,22 @@ class MemberRepositoryTest {
         memberRepository.save(new Member("member5", 10));
 
         int age = 10;
-        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+        // 페이지는 0부터, 3개를 가져오고 유저명 역순정렬
+        PageRequest pageRequest = PageRequest.of(1, 3, Sort.by(Sort.Direction.DESC, "username"));
 
-        //when
+        //when Page 타입으로 받으면 count 쿼리가 추가로 나간다.
         Page<Member> page = memberRepository.findByAge(age, pageRequest);
 
         //then
-        List<Member> content = page.getContent();
-        long totalElements = page.getTotalElements();
+        List<Member> content = page.getContent(); // 조회 데이터수
+        long totalElements = page.getTotalElements(); // 전체 총건수
 
-        assertEquals(content.size(), 3);
-        assertEquals(totalElements, 5);
-        assertEquals(page.getNumber(), 0);
-        assertEquals(page.getTotalPages(), 2);
-        assertEquals(page.isFirst(), true);
-        assertEquals(page.hasNext(), true);
+        assertEquals(content.size(), 3); // 페이징 사이즈가 3이므로 한번에 3개만 가져온다
+        assertEquals(totalElements, 5); // 쿼리의 총 조회결과는 5개
+        assertEquals(page.getNumber(), 0); // 페이지 번호. 0부터 시작한다
+        assertEquals(page.getTotalPages(), 2); // 페이징수3, 총5이니까 3,2 이렇게 나눠짐
+        assertEquals(page.isFirst(), true); // 조회결과가 첫페이지라는뜻
+        assertEquals(page.hasNext(), true); // 다음페이지가 있다는뜻
     }
 
     @Test
@@ -244,7 +246,7 @@ class MemberRepositoryTest {
         assertEquals(content.size(), 3);
         assertEquals(page.getNumber(), 0);
         assertEquals(page.isFirst(), true);
-        assertEquals(page.hasNext(), true);
+        assertEquals(page.hasNext(), true); // 페이지수 + 1개의 데이터를 조회해 오기떄문에 조회결과가 4건이면 다음데이터가 있다고 판단한다
     }
 
     @Test
@@ -267,8 +269,15 @@ class MemberRepositoryTest {
 
     }
 
+    /**
+     * Page의 count 쿼리는 기본적으로 본 쿼리와 같은 쿼리를 이용한다.
+     * 문제는 본 쿼리가 left join이 많아 복잡하고
+     * count 쿼리에는 드라이빙 테이블만 집계하면 되는경우
+     * 본 쿼리를 똑같이 사용하면 성능이 느리다.
+     * 이런경우 최적화 하는법
+     */
     @Test
-    public void paging4() throws Exception {
+    public void paging4_카운트쿼리를_분리해_최적화한다() throws Exception {
         //given
         memberRepository.save(new Member("member1", 10));
         memberRepository.save(new Member("member2", 10));
@@ -281,6 +290,8 @@ class MemberRepositoryTest {
 
         //when
         Page<Member> page = memberRepository.findQueryByAge(age, pageRequest); // 0~limit까지만 끊어서 가져옴
+        
+        // DTO변환이 필요한경우
         Page<MemberDto> map = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
     }
 
@@ -335,10 +346,9 @@ class MemberRepositoryTest {
             System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
             System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
         }
-
-        //then
     }
 
+    @DisplayName("JPQL 패치 조인으로 Member와 Team 한번에 조회한다")
     @Test
     public void findMemberLazy2() throws Exception {
         //given
@@ -357,10 +367,10 @@ class MemberRepositoryTest {
         em.flush();
         em.clear();
 
-        //when
+        //when : lazy로딩이라도 패치조인을 사용하면 한번에 조회가 가능하다. 단 주 엔티티가 N:1 관계일
         List<Member> members = memberRepository.findMemberFetchJoin();
 
-        for (Member member : members) {
+        for (Member member : members) { // 이미 members 조회 시점에 team도 영속화 되어 있기 때문에 team에 접근할때 쿼리가 안나간다
             System.out.println("member.getUsername() = " + member.getUsername());
             System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
             System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
@@ -369,6 +379,7 @@ class MemberRepositoryTest {
         //then
     }
 
+    @DisplayName("entity graph로 Member와 Team 한번에 조회한다")
     @Test
     public void findMemberLazy3() throws Exception {
         //given
@@ -398,7 +409,8 @@ class MemberRepositoryTest {
 
         //then
     }
-
+    
+    @DisplayName("NamedEntityGraph로 사전에 정의한 EntityGraph를 실행할 수 있다")
     @Test
     public void findMemberLazy4() throws Exception {
         //given
